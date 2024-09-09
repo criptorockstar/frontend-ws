@@ -2,13 +2,16 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 import { useMediaQuery } from '@/components/use-media-query'
 import { RootState, useAppSelector } from '@/store/store'
 import { useParams } from 'next/navigation'
 import { table } from 'console'
-import Swal from 'sweetalert2/dist/sweetalert2.js'
 
+import Image from 'next/image'
+import Timer from "@/components/timer"
+import Stone from "@/components/stone-meter"
+
+import Swal from 'sweetalert2/dist/sweetalert2.js'
 import 'sweetalert2/src/sweetalert2.scss'
 
 interface Card {
@@ -52,6 +55,8 @@ export default function Duel() {
   const [vida, setVida] = React.useState<Card>()
 
   const [playerCards, setPlayerCards] = React.useState<Card[]>([])
+
+  const [points, setPoints] = React.useState<number>(0)
 
   const playerCardStyle = (index: number) => {
     switch (index) {
@@ -147,7 +152,7 @@ export default function Duel() {
       // Get messages from the server
       matchSocket.onmessage = function (e) {
         const data = JSON.parse(e.data)
-        console.log(data)
+        // console.log(data)
 
         if (data.type === 'usernames') {
           // Set oponent username
@@ -158,8 +163,8 @@ export default function Duel() {
             }
           }
         } else if (data.type === 'round cards') {
-          // Delete old cards
-          setPlayerCards([])
+          // // Delete old cards
+          // setPlayerCards([])
 
           // render user cards
           const roundCards = data.value
@@ -187,7 +192,62 @@ export default function Duel() {
         } else if (data.type === 'error') {
           // Render errores with sweetalert
           showError(data.value)
-        } 
+        } else if (data.type === 'round played cards') {
+          for (const cardItem of data.value) {
+            const player = cardItem.player
+            const card = cardItem.card
+
+            // Render cards in board
+            const cardData = getCardData(card)
+            setTableCards((prev) => [
+              ...prev,
+              {
+                suit: cardData.suit,
+                number: cardData.number,
+                image: cardData.image,
+              },
+            ])
+
+            console.log({ player, card })
+
+            if (player === user.username) {
+              // Remove card from player
+              setPlayerCards((prevPlayerCards) => {
+                // Filter out the card to be removed
+                const newPlayerCards = prevPlayerCards.filter(
+                  (playerCard) => playerCard.image !== cardData.image
+                )
+                console.log({ newPlayerCards })
+                return newPlayerCards
+              })
+            } else {
+              // Reduce oponent cards
+              setOponentCards((prev) => prev - 1)
+            }
+          }
+        } else if (data.type === 'round winner') {
+          setTimeout(() => {
+            // Reset table cards
+            setTableCards([])
+
+            // Show winner with alert
+            Swal.fire({
+              title:
+                data.value === user.username
+                  ? '¡Ganaste la ronda!'
+                  : '¡Perdiste la ronda!',
+              icon: data.value === user.username ? 'success' : 'warning',
+              confirmButtonText: 'Siguiente ronda',
+            })
+          }, 1500)
+        } else if (data.type === 'points') {
+          // Update player points
+          for (const pointsData of data.value) {
+            if (pointsData.player === user.username) {
+              setPoints(pointsData.points)
+            }
+          }
+        }
       }
 
       matchSocket.onclose = function (e) {
@@ -197,81 +257,101 @@ export default function Duel() {
   }, [matchSocket])
 
   useEffect(() => {
-    console.log({tableCards})
+    console.log({ tableCards })
   }, [tableCards])
 
-  return (
-    <React.Fragment>
-      <div className='relative'>
-        {showOverlay && (
-          <div className='fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50'>
-            <div className='text-white text-2xl'>Empieza el juego</div>
-          </div>
-        )}
-        {/* Área de la Mesa */}
-        <div
-          className='flex justify-center items-center w-full fixed top-[130px] left-0'
-          style={{ height: 'calc(100vh - 220px)' }}
-        >
-          <div
-            className={`${isDesktop ? 'bg-table' : 'bg-tablev'} w-full h-full`}
-          />
-        </div>
+  useEffect(() => {
+    console.log({ playerCards })
+  }, [playerCards])
 
-        {/* Contenido sobre la Mesa */}
-        <div
-          className='z-10 relative text-white flex flex-col justify-between h-full'
-          style={{ height: 'calc(100vh - 160px)' }}
-        >
-          {/* Oponente */}
-          <div className='flex justify-center'>
+  return (
+    <main className='grid h-screen overflow-auto space-y-0'>
+      <div className='bg-goat absolute inset-0 z-0'></div>
+      <div className='flex flex-col h-screen relative'>
+        {/* UI content */}
+        <div className='relative z-10'>
+          <div className='flex justify-between w-full mt-5'>
+            <div className='mt-[5px] mb-4'>
+              <Timer timer={'30:00'} />
+            </div>
             <div>
-              <div className='mt-[-40px]'>
-                <div className='relative w-[100px] h-[90px] mt-8 flex justify-center items-center'>
-                  <div className='absolute inset-0 bg-white z-0 w-[82px] h-[90px] ml-[10px]' />
-                  <Image
-                    src={oponent.avatar}
-                    alt='avatar'
-                    width={70}
-                    height={70}
-                    className='absolute z-10'
-                  />
-                  <div className='absolute z-20'>
-                    <Image
-                      src='/overlay.png'
-                      alt='overlay'
-                      width={120}
-                      height={120}
-                    />
+              <Stone stones={30} />
+            </div>
+          </div>
+          {/* Dynamic content */}
+          <div className='flex items-center justify-center h-full'>
+            <div className='relative'>
+              {showOverlay && (
+                <div className='fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50'>
+                  <div className='text-white text-2xl'>Empieza el juego</div>
+                </div>
+              )}
+              {/* Área de la Mesa */}
+              <div
+                className='flex justify-center items-center w-full fixed top-[130px] left-0'
+                style={{ height: 'calc(100vh - 220px)' }}
+              >
+                <div
+                  className={`${
+                    isDesktop ? 'bg-table' : 'bg-tablev'
+                  } w-full h-full`}
+                />
+              </div>
+
+              {/* Contenido sobre la Mesa */}
+              <div
+                className='z-10 relative text-white flex flex-col justify-between h-full'
+                style={{ height: 'calc(100vh - 160px)' }}
+              >
+                {/* Oponente */}
+                <div className='flex justify-center'>
+                  <div>
+                    <div className='mt-[-40px]'>
+                      <div className='relative w-[100px] h-[90px] mt-8 flex justify-center items-center'>
+                        <div className='absolute inset-0 bg-white z-0 w-[82px] h-[90px] ml-[10px]' />
+                        <Image
+                          src={oponent.avatar}
+                          alt='avatar'
+                          width={70}
+                          height={70}
+                          className='absolute z-10'
+                        />
+                        <div className='absolute z-20'>
+                          <Image
+                            src='/overlay.png'
+                            alt='overlay'
+                            width={120}
+                            height={120}
+                          />
+                        </div>
+                      </div>
+                      <div className='text-center text-white truncate max-w-[100px]'>
+                        @{oponent.username}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className='flex flex-row ml-3'>
+                    {Array.from({ length: oponentCards }, (_, index) => (
+                      <div
+                        key={index}
+                        className={`${oponentCardStyle(index)}`}
+                      >
+                        <Image
+                          src='/card_back.png'
+                          alt={`Carta ${index + 1}`}
+                          width={70}
+                          height={70}
+                        />
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <div className='text-center text-white truncate max-w-[100px]'>
-                  @{oponent.username}
-                </div>
-              </div>
-            </div>
 
-            <div className='flex flex-row ml-3'>
-              {Array.from({ length: oponentCards }, (_, index) => (
-                <div
-                  key={index}
-                  className={`${oponentCardStyle(index)}`}
-                >
-                  <Image
-                    src='/card_back.png'
-                    alt={`Carta ${index + 1}`}
-                    width={70}
-                    height={70}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Elemento Central */}
-          <div className='flex justify-center'>
-            <div>
-              {/* <div className='text-center text-white'>
+                {/* Elemento Central */}
+                <div className='flex justify-center'>
+                  <div>
+                    {/* <div className='text-center text-white'>
                 <div className='flex flex-row'>
                   <div>
                     <Image
@@ -284,71 +364,74 @@ export default function Duel() {
                 </div>
               </div> */}
 
-              {/*table cards*/}
-              <div className='flex flex-row'>
-                {tableCards &&
-                  tableCards.map((card: any, index: any) => (
-                    <div key={index}>
-                      <Image
-                        src={card.image}
-                        alt=''
-                        width={60}
-                        height={70}
-                      />
+                    {/*table cards*/}
+                    <div className='flex flex-row'>
+                      {tableCards &&
+                        tableCards.map((card: any, index: any) => (
+                          <div key={index}>
+                            <Image
+                              src={card.image}
+                              alt=''
+                              width={60}
+                              height={70}
+                            />
+                          </div>
+                        ))}
                     </div>
-                  ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Player */}
-          <div className='flex justify-center mb-4'>
-            <div>
-              <div className=''>
-                <div className='relative w-[100px] h-[90px] flex justify-center items-center'>
-                  <div className='absolute inset-0 bg-white z-0 w-[82px] h-[90px] ml-[10px]' />
-                  <Image
-                    src={'/avatar.png'}
-                    alt='avatar'
-                    width={70}
-                    height={70}
-                    className='absolute z-10'
-                  />
-                  <div className='absolute z-20'>
-                    <Image
-                      src='/overlay.png'
-                      alt='overlay'
-                      width={120}
-                      height={120}
-                    />
                   </div>
                 </div>
-                <div className='text-center text-white truncate max-w-[100px]'>
-                  @{user.username}
+
+                {/* Player */}
+                <div className='flex justify-center mb-4'>
+                  <div>
+                    <div className=''>
+                      <div className='relative w-[100px] h-[90px] flex justify-center items-center'>
+                        <div className='absolute inset-0 bg-white z-0 w-[82px] h-[90px] ml-[10px]' />
+                        <Image
+                          src={'/avatar.png'}
+                          alt='avatar'
+                          width={70}
+                          height={70}
+                          className='absolute z-10'
+                        />
+                        <div className='absolute z-20'>
+                          <Image
+                            src='/overlay.png'
+                            alt='overlay'
+                            width={120}
+                            height={120}
+                          />
+                        </div>
+                      </div>
+                      <div className='text-center text-white truncate max-w-[100px]'>
+                        @{user.username}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className='flex flex-row ml-3'>
+                    {playerCards &&
+                      playerCards.map((card, index) => (
+                        <div
+                          key={index}
+                          className={`${playerCardStyle(index)} cursor-pointer`}
+                          onClick={() => handleCardClick(card)} // Añadido onClick para manejar el clic en la carta
+                        >
+                          <Image
+                            src={card.image}
+                            width={70}
+                            height={70}
+                            alt={`Carta ${index + 1}`}
+                          />
+                        </div>
+                      ))}
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <div className='flex flex-row ml-3'>
-              {playerCards &&
-                playerCards.map((card, index) => (
-                  <div
-                    key={index}
-                    className={`${playerCardStyle(index)} cursor-pointer`}
-                    onClick={() => handleCardClick(card)} // Añadido onClick para manejar el clic en la carta
-                  >
-                    <Image
-                      src={card.image}
-                      width={70}
-                      height={70}
-                      alt={`Carta ${index + 1}`}
-                    />
-                  </div>
-                ))}
             </div>
           </div>
         </div>
       </div>
-    </React.Fragment>
+    </main>
   )
 }
