@@ -141,6 +141,27 @@ export default function Duel() {
       })
     }
 
+    function showWinner(winner: string) {
+      let mainText = "¡Ganaste la ronda!"
+      if (winner === "draw") {
+        mainText = "¡Empate!"
+      } else if (winner !== user.username) {
+        mainText = "¡Perdiste la ronda!"
+      }
+
+      Swal.fire({
+        title: mainText,
+        icon: winner === user.username ? 'success' : 'warning',
+        confirmButtonText: 'Siguiente ronda',
+      }).then((result: any) => {
+        if (result.isConfirmed) {
+          // Redirect to the match page with router
+          const page = `/`
+          router.push(page)
+        }
+      })
+    }
+
     // send username to the server after connection is open
     if (matchSocket) {
       matchSocket.onopen = function (e) {
@@ -235,14 +256,7 @@ export default function Duel() {
             setTableCards([])
 
             // Show winner with alert
-            Swal.fire({
-              title:
-                data.value === user.username
-                  ? '¡Ganaste la ronda!'
-                  : '¡Perdiste la ronda!',
-              icon: data.value === user.username ? 'success' : 'warning',
-              confirmButtonText: 'Siguiente ronda',
-            })
+            showWinner(data.value)
           }, 1500)
         } else if (data.type === 'points') {
           // Update player points
@@ -280,7 +294,7 @@ export default function Duel() {
               <Timer timer={'30:00'} />
             </div>
             <div>
-              <Stone stones={30} />
+              <Stone stones={points} />
             </div>
           </div>
           {/* Dynamic content */}
