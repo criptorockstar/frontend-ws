@@ -42,6 +42,7 @@ export default function Duel() {
   const isDesktop = useMediaQuery('(min-width: 768px)')
   const [showOverlay, setShowOverlay] = React.useState(false)
   const [points, setPoints] = React.useState<number>(0)
+  const [selectedCard, setSelectedCard] = React.useState<GameCard | null>(null)
 
   // Players
   const user = useAppSelector((state: RootState) => state.user)
@@ -85,6 +86,12 @@ export default function Duel() {
   // Event handlers
 
   const handleCardClick = (card: Card) => {
+
+    // Set selected card
+    setSelectedCard(card)
+
+    console.log({tableCards})
+
     // Submit card to ws when clicked
     const cardStr = `${card.number} ${card.suit}`
     if (matchSocket) {
@@ -275,6 +282,9 @@ export default function Duel() {
             // Reset table cards
             setTableCards([])
 
+            // reset selected card
+            setSelectedCard(null)
+
             // Show winner with alert
             showWinner(data.value)
           }, 1000)
@@ -300,8 +310,12 @@ export default function Duel() {
   }, [tableCards])
 
   useEffect(() => {
-    console.log({ playerCards })
+    // console.log({ playerCards })
   }, [playerCards])
+
+  useEffect(() => {
+    console.log({ selectedCard })
+  }, [selectedCard])
 
   return (
     <main className='grid h-screen overflow-auto space-y-0'>
@@ -453,8 +467,15 @@ export default function Duel() {
                       playerCards.map((card, index) => (
                         <div
                           key={index}
-                          className={`${playerCardStyle(index)} cursor-pointer`}
-                          onClick={() => handleCardClick(card)} // Añadido onClick para manejar el clic en la carta
+                          className={`
+                            ${playerCardStyle(index)} cursor-pointer
+                            duration-150
+                            ${selectedCard?.image === card.image && `opacity-50`}
+                          `}
+                          onClick={() => {
+                            if (tableCards.length > 0 && tableCards.length < 3) {
+                              handleCardClick(card)}} // Añadido onClick para manejar el clic en la carta
+                            }
                         >
                           <Image
                             src={card.image}
