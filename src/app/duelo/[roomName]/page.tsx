@@ -8,8 +8,8 @@ import { useParams } from 'next/navigation'
 import { table } from 'console'
 
 import Image from 'next/image'
-import Timer from "@/components/timer"
-import Stone from "@/components/stone-meter"
+import Timer from '@/components/timer'
+import Stone from '@/components/stone-meter'
 
 import Swal from 'sweetalert2/dist/sweetalert2.js'
 import 'sweetalert2/src/sweetalert2.scss'
@@ -46,10 +46,10 @@ export default function Duel() {
   // Players
   const user = useAppSelector((state: RootState) => state.user)
   const [oponent, setOponent] = React.useState<Oponent>({
-  username: '',
+    username: '',
     avatar: '',
   })
-  
+
   // Cards
   const [tableCards, setTableCards] = React.useState<Card[]>([])
   const [playerCards, setPlayerCards] = React.useState<Card[]>([])
@@ -142,11 +142,11 @@ export default function Duel() {
     }
 
     function showWinner(winner: string) {
-      let mainText = "¡Ganaste la ronda!"
-      if (winner === "draw") {
-        mainText = "¡Empate!"
+      let mainText = '¡Ganaste la ronda!'
+      if (winner === 'draw') {
+        mainText = '¡Empate!'
       } else if (winner !== user.username) {
-        mainText = "¡Perdiste la ronda!"
+        mainText = '¡Perdiste la ronda!'
       }
 
       Swal.fire({
@@ -155,9 +155,29 @@ export default function Duel() {
         confirmButtonText: 'Siguiente ronda',
       }).then((result: any) => {
         if (result.isConfirmed) {
-          // Redirect to the match page with router
-          const page = `/`
-          router.push(page)
+          // Start next round
+          matchSocket &&
+            matchSocket.send(
+              JSON.stringify({
+                type: 'next round',
+                value: '',
+              })
+            )
+
+          // Request more cards if user has 0 cards
+          setPlayerCards((prev) => {
+            if (prev.length === 0) {
+              matchSocket &&
+                matchSocket.send(
+                  JSON.stringify({
+                    type: 'more cards',
+                    value: '',
+                  })
+                )
+              return []
+            }
+            return prev
+          })
         }
       })
     }
@@ -188,8 +208,9 @@ export default function Duel() {
             }
           }
         } else if (data.type === 'round cards') {
-          // // Delete old cards
-          // setPlayerCards([])
+
+          // Reset player cards
+          setPlayerCards([])
 
           // render user cards
           const roundCards = data.value
@@ -242,7 +263,6 @@ export default function Duel() {
                 const newPlayerCards = prevPlayerCards.filter(
                   (playerCard) => playerCard.image !== cardData.image
                 )
-                console.log({ newPlayerCards })
                 return newPlayerCards
               })
             } else {
@@ -257,7 +277,7 @@ export default function Duel() {
 
             // Show winner with alert
             showWinner(data.value)
-          }, 1500)
+          }, 1000)
         } else if (data.type === 'points') {
           // Update player points
           for (const pointsData of data.value) {
@@ -276,7 +296,7 @@ export default function Duel() {
 
   // Monitoring
   useEffect(() => {
-    console.log({ tableCards })
+    // console.log({ tableCards })
   }, [tableCards])
 
   useEffect(() => {
