@@ -22,3 +22,4 @@ const Exp: React.FC<ExpProps> = ({ experience, level }: ExpProps) => {
 };
 
 export default Exp;
+

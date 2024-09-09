@@ -20,7 +20,7 @@ interface GameCard {
   image: any;
 }
 
-export default function Duel() {
+export default function DuelPage() {
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const [showOverlay, setShowOverlay] = React.useState(false);
 

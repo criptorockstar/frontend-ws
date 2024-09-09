@@ -1,34 +1,28 @@
-"use client";
-
-import React, { useState } from "react";
-import { Button, Divider } from "@nextui-org/react";
-import Image from "next/image";
-import { images, fonts } from "@/constants";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { SelectDuel, SelectBet } from "@/components";
-import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import * as React from "react";
+import { Button } from "@/components/ui/button"
+import Image from "next/image"
+import * as fonts from "@/components/fonts"
+import SelectDuel from "./SelectDuel"
+import SelectBet from "./SelectBet"
+import { ArrowLeft } from "lucide-react"
 
 const Duelmode = ({
   onMode,
   duelToggle,
 }: any) => {
-  const [isOptionsOpen, setIsOptionsOpen] = useState(false);
-  const [selectedValue, setSelectedValue] = useState("1 vs 1");
-  const [selectedCredits, setSelectedCredits] = useState("10");
+  const [isOptionsOpen, setIsOptionsOpen] = React.useState(false);
+  const [selectedValue, setSelectedValue] = React.useState("1 vs 1");
+  const [selectedCredits, setSelectedCredits] = React.useState("10");
 
-  // Selected duelmode
   const onSelectChange = (value: string) => {
     setSelectedValue(value);
     console.log("selected", value);
-  };
-  // \Selected duelmode
+  }; // \Selected duelmode
 
-  // Selected credits
   const onSelectCredits = (value: string) => {
     setSelectedCredits(value);
     console.log("selected", value);
-  };
-  // \Selected credits
+  };// \Selected credits
 
   const handleToggleOptions = (isOpen: boolean) => {
     setIsOptionsOpen(isOpen);
@@ -50,29 +44,30 @@ const Duelmode = ({
 
         <div className="relative ml-[100px]">
           <Button
-            isIconOnly
+            size="icon"
             className="bg-red-500 rounded-[12px]"
             onClick={duelToggle}
           >
-            <FontAwesomeIcon icon={faArrowLeft} size="2x" className="text-white" />
+            <ArrowLeft size="2x"
+              className="text-white" />
           </Button>
         </div>
 
         <div className="flex flex-col justify-center items-center w-full relative">
           <div>
-            <Image src={images.duel} alt="coin" width={120} height={120} className="mt-[-100px]" />
+            <Image src="/duel.svg" alt="coin" width={120} height={120} className="mt-[-100px]" />
           </div>
 
           <div className={`
-            bg-[#d2bf58] w-[200px] mt-[-18px] h-[80px] 
-            flex flex-col items-center justify-center p-4 z-20 
-            relative
-            ${isOptionsOpen ? "rounded-t-[12px]" : "rounded-[12px]"}
+              bg-[#d2bf58] w-[200px] mt-[-18px] h-[80px] 
+              flex flex-col items-center justify-center p-4 z-20 
+              relative
+              ${isOptionsOpen ? "rounded-t-[12px]" : "rounded-[12px]"}
           `}>
             <div className={`text-[#a7753a] mt-2 ${fonts.bowlbyOneSC.className} text-shadow text-[18px]`}>
               Duelo
             </div>
-            <Divider className="my-1 w-full" />
+            <div className="my-1 w-full" />
             <div className={`text-[#a7753a] ${fonts.bowlbyOneSC.className}`}>
               <SelectDuel
                 value={selectedValue}
@@ -108,17 +103,17 @@ const Duelmode = ({
             onClick={() => onMode(selectedValue, selectedCredits)}
             data-hover={null}
             className={`
-              ${fonts.bowlbyOneSC.className} 
-              bg-[#68b22f] uppercase text-white text-[30px]
-              border-2 border-[#A7753A]
-              px-8 py-7
-            `}>
+            ${fonts.bowlbyOneSC.className} 
+            bg-[#68b22f] uppercase text-white text-[30px]
+            border-2 border-[#A7753A]
+            px-8 py-7
+          `}>
             Jugar
           </Button>
         </div>
       </div>
     </React.Fragment>
   );
-};
+}
 
-export default Duelmode;
+export default Duelmode
