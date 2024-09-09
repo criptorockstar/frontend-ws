@@ -32,22 +32,22 @@ interface GameCard {
 }
 
 export default function Duel() {
-
   // Router
   const router = useRouter()
-  
+
   // Get roomName from the URL
   const { roomName } = useParams()
-  
+
   // Game state
   const isDesktop = useMediaQuery('(min-width: 768px)')
   const [matchSocket, setMatchSocket] = useState<WebSocket | null>(null)
   const [showOverlay, setShowOverlay] = React.useState(false)
-  const [textOverlay, setTextOverlay] = React.useState('Sample text overlay')
-  const [ctaTextOverlay, setCtaTextOverlay] = React.useState('Sample CTA')
+  const [textOverlay, setTextOverlay] = React.useState("Sample text overlay")
+  const [ctaTextOverlay, setCtaTextOverlay] = React.useState('CTA')
   const [ctaLinkOverlay, setCtaLinkOverlay] = React.useState('/')
   const [points, setPoints] = React.useState<number>(0)
   const [selectedCard, setSelectedCard] = React.useState<GameCard | null>(null)
+  const [waitingOpponent, setWaitingOpponent] = React.useState(true)
 
   // Players
   const user = useAppSelector((state: RootState) => state.user)
@@ -91,11 +91,8 @@ export default function Duel() {
   // Event handlers
 
   const handleCardClick = (card: Card) => {
-
     // Set selected card
     setSelectedCard(card)
-
-    console.log({tableCards})
 
     // Submit card to ws when clicked
     const cardStr = `${card.number} ${card.suit}`
@@ -111,16 +108,14 @@ export default function Duel() {
 
   // Lifecycle
 
-  useEffect(() => {    
+  useEffect(() => {
     // dummy initial data
     setOponent({ username: 'Oponente', avatar: '/avatar.png' })
   }, [])
-  
+
   useEffect(() => {
     // Setup WS when roomName is available
     if (roomName) {
-
-      console.log('Connecting to WS...')
       const WS_HOST = process.env.NEXT_PUBLIC_WS_HOST
       const wsEndpoint = `${WS_HOST}/match/${roomName}/`
       const newSocket = new WebSocket(wsEndpoint)
@@ -179,16 +174,16 @@ export default function Duel() {
               })
             )
 
-          // Request middle card
-          setTimeout(() => {
-            matchSocket &&
-              matchSocket.send(
-                JSON.stringify({
-                  type: 'middle card',
-                  value: '',
-                })
-              )
-          }, 1000)
+          // // Request middle card
+          // setTimeout(() => {
+          //   matchSocket &&
+          //     matchSocket.send(
+          //       JSON.stringify({
+          //         type: 'middle card',
+          //         value: '',
+          //       })
+          //     )
+          // }, 1000)
 
           // Request more cards if user has 0 cards
           setPlayerCards((prev) => {
@@ -204,6 +199,9 @@ export default function Duel() {
             }
             return prev
           })
+
+          // Wait for opponent
+          setWaitingOpponent(true)
         }
       })
     }
@@ -223,7 +221,6 @@ export default function Duel() {
       // Get messages from the server
       matchSocket.onmessage = function (e) {
         const data = JSON.parse(e.data)
-        // console.log(data)
 
         if (data.type === 'usernames') {
           // Set oponent username
@@ -234,7 +231,6 @@ export default function Duel() {
             }
           }
         } else if (data.type === 'round cards') {
-
           // Reset player cards
           setPlayerCards([])
 
@@ -252,7 +248,13 @@ export default function Duel() {
             ])
           }
         } else if (data.type === 'middle card') {
+
+          // Update table cards
           const middileCard = data.value
+          if (middileCard === '') {
+            setTableCards([])
+            return
+          }
           const cardData = getCardData(middileCard)
           setTableCards((prev) => [
             {
@@ -261,6 +263,10 @@ export default function Duel() {
               image: cardData.image,
             },
           ])
+
+          // Hide waiting overlay
+          setWaitingOpponent(false)
+
         } else if (data.type === 'error') {
           // Render errores with sweetalert
           showError(data.value)
@@ -280,7 +286,6 @@ export default function Duel() {
               },
             ])
 
-            console.log({ player, card })
 
             if (player === user.username) {
               // Remove card from player
@@ -291,7 +296,7 @@ export default function Duel() {
                 )
                 return newPlayerCards
               })
-            } 
+            }
           }
         } else if (data.type === 'round winner') {
           setTimeout(() => {
@@ -300,6 +305,7 @@ export default function Duel() {
 
             // Show winner with alert
             showWinner(data.value)
+
           }, 1000)
         } else if (data.type === 'points') {
           // Update player points
@@ -310,7 +316,7 @@ export default function Duel() {
           }
         } else if (data.type === 'game winner') {
           // Show winner in modal
-          let message = "Ganaste el juego!"
+          let message = 'Ganaste el juego!'
           if (data.value !== user.username) {
             message = `¡${data.value} ha ganado el juego!`
           }
@@ -329,23 +335,18 @@ export default function Duel() {
 
   useEffect(() => {
     
-    // Request middile card after 0.5 seconds without it
-    if (tableCards.length == 0) {
-      setTimeout(() => {
-        
-        console.log('Requesting middle card...')
-        
-        matchSocket &&
-        matchSocket.send(
-          JSON.stringify({
-            type: 'middle card',
-            value: '',
-          })
-        )
-      }, 0.5)
+    if (waitingOpponent) {
+      // Set overlay text and disable CTAs
+      setTextOverlay('Esperando al oponente...')
+      setCtaTextOverlay('')
+      setCtaLinkOverlay('')
+      setShowOverlay(true)
+    } else {
+      setShowOverlay(false)
     }
-  }, [tableCards])
- 
+
+  }, [waitingOpponent])
+
   useEffect(() => {
     setOponentCards(playerCards.length)
   }, [playerCards])
@@ -356,7 +357,7 @@ export default function Duel() {
   }, [playerCards])
 
   useEffect(() => {
-    console.log({ selectedCard })
+    // console.log({ selectedCard })
   }, [selectedCard])
 
   return (
@@ -379,24 +380,26 @@ export default function Duel() {
               {showOverlay && (
                 <div className='fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 flex-col'>
                   <div className='text-white text-2xl'>{textOverlay}</div>
-                  <Link 
-                    href={ctaLinkOverlay}
-                    className={`
-                      text-black
-                      bg-yellow
-                      my-4 
-                      px-6
-                      py-2
-                      text-lg 
-                      opacity-100 hover:opacity-80
-                      scale-100 hover:scale-95
-                      duration-150
-                      rounded-xl
-                      font-bold
-                    `}
-                  >
-                    {ctaTextOverlay}
-                  </Link>
+                  {ctaLinkOverlay && ctaTextOverlay && (
+                    <Link
+                      href={ctaLinkOverlay}
+                      className={`
+                        text-black
+                        bg-yellow
+                        my-4 
+                        px-6
+                        py-2
+                        text-lg 
+                        opacity-100 hover:opacity-80
+                        scale-100 hover:scale-95
+                        duration-150
+                        rounded-xl
+                        font-bold
+                      `}
+                    >
+                      {ctaTextOverlay}
+                    </Link>
+                  )}
                 </div>
               )}
               {/* Área de la Mesa */}
@@ -530,12 +533,20 @@ export default function Duel() {
                           className={`
                             ${playerCardStyle(index)} cursor-pointer
                             duration-150
-                            ${selectedCard?.image === card.image && `opacity-50`}
-                          `}
-                          onClick={() => {
-                            if (tableCards.length > 0 && tableCards.length < 3) {
-                              handleCardClick(card)}} // Añadido onClick para manejar el clic en la carta
+                            ${
+                              selectedCard?.image === card.image && `opacity-50`
                             }
+                          `}
+                          onClick={
+                            () => {
+                              if (
+                                tableCards.length > 0 &&
+                                tableCards.length < 3
+                              ) {
+                                handleCardClick(card)
+                              }
+                            } // Añadido onClick para manejar el clic en la carta
+                          }
                         >
                           <Image
                             src={card.image}
