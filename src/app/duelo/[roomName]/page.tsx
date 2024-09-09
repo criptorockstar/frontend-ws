@@ -31,18 +31,20 @@ interface GameCard {
 }
 
 export default function Duel() {
-  const [matchSocket, setMatchSocket] = useState<WebSocket | null>(null)
 
+  // Router
   const router = useRouter()
-
+  
   // Get roomName from the URL
   const { roomName } = useParams()
-
+  
   // Game state
+  const [matchSocket, setMatchSocket] = useState<WebSocket | null>(null)
   const isDesktop = useMediaQuery('(min-width: 768px)')
   const [showOverlay, setShowOverlay] = React.useState(false)
   const [points, setPoints] = React.useState<number>(0)
   const [selectedCard, setSelectedCard] = React.useState<GameCard | null>(null)
+  const wsSetup = useRef(false)
 
   // Players
   const user = useAppSelector((state: RootState) => state.user)
@@ -106,19 +108,25 @@ export default function Duel() {
 
   // Lifecycle
 
-  useEffect(() => {
-    // App setup
-
-    // Setup WS
-    const WS_HOST = process.env.NEXT_PUBLIC_WS_HOST
-    const wsEndpoint = `${WS_HOST}/match/${roomName}/`
-    const newSocket = new WebSocket(wsEndpoint)
-    setMatchSocket(newSocket)
-
-    // dummy data
+  useEffect(() => {    
+    // dummy initial data
     setOponent({ username: 'Oponente', avatar: '/avatar.png' })
     setOponentCards(3)
   }, [])
+  
+  useEffect(() => {
+    // Setup WS when roomName is available
+    if (roomName && !wsSetup.current) {
+      
+      console.log('Connecting to WS...')
+      const WS_HOST = process.env.NEXT_PUBLIC_WS_HOST
+      const wsEndpoint = `${WS_HOST}/match/${roomName}/`
+      const newSocket = new WebSocket(wsEndpoint)
+      setMatchSocket(newSocket)
+
+      wsSetup.current = true
+    }
+  }, [roomName])
 
   useEffect(() => {
     // Websocket setup
