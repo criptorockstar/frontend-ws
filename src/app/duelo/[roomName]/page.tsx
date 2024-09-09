@@ -10,6 +10,7 @@ import { table } from 'console'
 import Image from 'next/image'
 import Timer from '@/components/timer'
 import Stone from '@/components/stone-meter'
+import Link from 'next/link'
 
 import Swal from 'sweetalert2/dist/sweetalert2.js'
 import 'sweetalert2/src/sweetalert2.scss'
@@ -42,7 +43,9 @@ export default function Duel() {
   const isDesktop = useMediaQuery('(min-width: 768px)')
   const [matchSocket, setMatchSocket] = useState<WebSocket | null>(null)
   const [showOverlay, setShowOverlay] = React.useState(false)
-  const [textOverlay, setTextOverlay] = React.useState('')
+  const [textOverlay, setTextOverlay] = React.useState('Sample text overlay')
+  const [ctaTextOverlay, setCtaTextOverlay] = React.useState('Sample CTA')
+  const [ctaLinkOverlay, setCtaLinkOverlay] = React.useState('/')
   const [points, setPoints] = React.useState<number>(0)
   const [selectedCard, setSelectedCard] = React.useState<GameCard | null>(null)
 
@@ -316,6 +319,8 @@ export default function Duel() {
             message = `¡${data.value} ha ganado el juego!`
           }
           setTextOverlay(message)
+          setCtaTextOverlay('Volver a jugar')
+          setCtaLinkOverlay('/matching')
           setShowOverlay(true)
         }
       }
@@ -372,8 +377,26 @@ export default function Duel() {
           <div className='flex items-center justify-center h-full'>
             <div className='relative'>
               {showOverlay && (
-                <div className='fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50'>
+                <div className='fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 flex-col'>
                   <div className='text-white text-2xl'>{textOverlay}</div>
+                  <Link 
+                    href={ctaLinkOverlay}
+                    className={`
+                      text-black
+                      bg-yellow
+                      my-4 
+                      px-6
+                      py-2
+                      text-lg 
+                      opacity-100 hover:opacity-80
+                      scale-100 hover:scale-95
+                      duration-150
+                      rounded-xl
+                      font-bold
+                    `}
+                  >
+                    {ctaTextOverlay}
+                  </Link>
                 </div>
               )}
               {/* Área de la Mesa */}
