@@ -114,7 +114,6 @@ export default function Duel() {
   useEffect(() => {    
     // dummy initial data
     setOponent({ username: 'Oponente', avatar: '/avatar.png' })
-    setOponentCards(3)
   }, [])
   
   useEffect(() => {
@@ -292,10 +291,7 @@ export default function Duel() {
                 )
                 return newPlayerCards
               })
-            } else {
-              // Reduce oponent cards
-              setOponentCards((prev) => prev - 1)
-            }
+            } 
           }
         } else if (data.type === 'round winner') {
           setTimeout(() => {
@@ -331,26 +327,30 @@ export default function Duel() {
     }
   }, [matchSocket])
 
-  // Monitoring
   useEffect(() => {
-
+    
     // Request middile card after 0.5 seconds without it
     if (tableCards.length == 0) {
       setTimeout(() => {
-
+        
         console.log('Requesting middle card...')
-
+        
         matchSocket &&
-          matchSocket.send(
-            JSON.stringify({
-              type: 'middle card',
-              value: '',
-            })
-          )
+        matchSocket.send(
+          JSON.stringify({
+            type: 'middle card',
+            value: '',
+          })
+        )
       }, 0.5)
     }
   }, [tableCards])
+ 
+  useEffect(() => {
+    setOponentCards(playerCards.length)
+  }, [playerCards])
 
+  // Monitoring
   useEffect(() => {
     // console.log({ playerCards })
   }, [playerCards])
