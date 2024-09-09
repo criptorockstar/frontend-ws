@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { useMediaQuery } from '@/components/use-media-query'
 import { RootState, useAppSelector } from '@/store/store'
 import { useParams } from 'next/navigation'
+import { table } from 'console'
 
 interface Card {
   suit: string
@@ -75,6 +76,17 @@ export default function Duel() {
 
   // Load users data when the component is mounted
   useEffect(() => {
+
+    function getCardData(card: string): Card {
+      const cardParts = card.split(' ')
+      const cardNumber = parseInt(cardParts[0])
+      const cardSuit = cardParts[1]
+      const cardImage = `/cards/${cardNumber}_${cardSuit}.png`
+      return { suit: cardSuit, number: cardNumber, image: cardImage }
+    }
+
+    console.log(tableCards)
+
     // Run only once
     if (isRunning.current) {
       return
@@ -98,7 +110,7 @@ export default function Duel() {
     // Get messages from the server
     matchSocket.onmessage = function (e) {
       const data = JSON.parse(e.data)
-      console.log(data)
+      // console.log(data)
 
       if (data.type === 'usernames') {
         // Set oponent username
@@ -109,22 +121,26 @@ export default function Duel() {
           }
         }
       } else if (data.type === 'round cards') {
-
         // Delete old cards
         setPlayerCards([])
 
         // render user cards
         const roundCards = data.value
         for (const card of roundCards) {
-          const cardParts = card.split(' ')
-          const cardNumber = parseInt(cardParts[0])
-          const cardSuit = cardParts[1]
-          const cardImage = `/cards/${cardNumber}_${cardSuit}.png`
+          const cardData = getCardData(card)
           setPlayerCards((prev) => [
             ...prev,
-            { suit: cardSuit, number: cardNumber, image: cardImage },
+            { suit: cardData.suit, number: cardData.number, image: cardData.image },
           ])
         }
+      } else if (data.type === 'middle card') {
+        const middileCard = data.value
+        const cardData = getCardData(middileCard)
+        console.log({middileCard, cardData})
+        setTableCards((prev) => [
+          { suit: cardData.suit, number: cardData.number, image: cardData.image },
+        ])
+        
       }
     }
 
@@ -132,6 +148,10 @@ export default function Duel() {
     setOponent({ username: 'Oponente', avatar: '/avatar.png' })
     setOponentCards(3)
   }, [])
+
+  useEffect(() => {
+    console.log(tableCards)
+  }, [tableCards])
 
   return (
     <React.Fragment>
@@ -204,7 +224,8 @@ export default function Duel() {
           {/* Elemento Central */}
           <div className='flex justify-center'>
             <div>
-              <div className='text-center text-white'>
+              
+              {/* <div className='text-center text-white'>
                 <div className='flex flex-row'>
                   <div>
                     <Image
@@ -214,26 +235,8 @@ export default function Duel() {
                       alt=''
                     />
                   </div>
-
-                  <div>
-                    {vida ? (
-                      <Image
-                        src={vida.image}
-                        alt='Carta del Juego'
-                        width={60}
-                        height={70}
-                      />
-                    ) : (
-                      <Image
-                        src='/card_back.png'
-                        alt='Carta Oculta'
-                        width={60}
-                        height={70}
-                      />
-                    )}
-                  </div>
                 </div>
-              </div>
+              </div> */}
 
               {/*table cards*/}
               <div className='flex flex-row'>
