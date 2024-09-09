@@ -108,18 +108,29 @@ export default function Duel() {
             setOponent({ username, avatar: '/avatar.png' })
           }
         }
+      } else if (data.type === 'round cards') {
+
+        // Delete old cards
+        setPlayerCards([])
+
+        // render user cards
+        const roundCards = data.value
+        for (const card of roundCards) {
+          const cardParts = card.split(' ')
+          const cardNumber = parseInt(cardParts[0])
+          const cardSuit = cardParts[1]
+          const cardImage = `/cards/${cardNumber}_${cardSuit}.png`
+          setPlayerCards((prev) => [
+            ...prev,
+            { suit: cardSuit, number: cardNumber, image: cardImage },
+          ])
+        }
       }
     }
 
     // dummy data
     setOponent({ username: 'Oponente', avatar: '/avatar.png' })
     setOponentCards(3)
-
-    setPlayerCards([
-      { suit: 'cups', number: 1, image: '/cards/1_cups.png' },
-      { suit: 'cups', number: 2, image: '/cards/2_cups.png' },
-      { suit: 'cups', number: 3, image: '/cards/3_cups.png' },
-    ])
   }, [])
 
   return (
