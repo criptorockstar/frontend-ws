@@ -3,35 +3,38 @@
 import React from "react"
 import Image from "next/image"
 import { useMediaQuery } from "@/components/use-media-query"
+import { RootState, useAppSelector } from "@/store/store"
 
 interface Card {
   suit: string;
   number: number;
   image: string;
-  created_at: string;
+}
+
+interface Oponent {
+  username: string;
+  avatar: string;
 }
 
 interface GameCard {
   image: any;
 }
 
-function Game() {
-  const dispatch = useAppDispatch();
+export default function Duel() {
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const [showOverlay, setShowOverlay] = React.useState(false);
 
   const user = useAppSelector((state: RootState) => state.user);
-  const game = useAppSelector((state: RootState) => state.game);
 
-  const oponent_1 = game.oponents[0]
-  const oponent_1_cards = game.oponent_cards ?? 0;
-  const player_cards = game.hand_cards as Card[];
-  const game_card: any = game.game_card;
-  const played_cards = game.played_cards;
+  const [oponent, setOponent] = React.useState<Oponent>({ username: "", avatar: "" });
+  const [oponentCards, setOponentCards] = React.useState<number>(0);
 
-  const defaultAvatar = "http://127.0.0.1:5000/images/avatar/default.png";
+  const [tableCards, setTableCards] = React.useState<Card[]>([]);
+  const [vida, setVida] = React.useState<Card>();
 
-  const getCardStyle = (index: number) => {
+  const [playerCards, setPlayerCards] = React.useState<Card[]>([]);
+
+  const playerCardStyle = (index: number) => {
     switch (index) {
       case 0:
         return "transform rotate-[-10deg] mt-[-4px] hover:mt-[-8px]";
@@ -44,7 +47,7 @@ function Game() {
     }
   };
 
-  const getOponentCardStyle = (index: number) => {
+  const oponentCardStyle = (index: number) => {
     switch (index) {
       case 0:
         return "transform rotate-[-10deg] mt-[-4px]";
@@ -57,52 +60,8 @@ function Game() {
     }
   };
 
-  const handleConection = async () => {
-    setShowOverlay(true);
-    setTimeout(() => {
-      setShowOverlay(false);
-    }, 3000);
-
-    socket?.emit("deal", { room: game.room });
-  }
-
-  const { getCards } = useGame();
-
-  const handleDeal = async () => {
-    try {
-      await getCards();
-    } catch (error: any) {
-      console.log(error.response.data)
-    }
-  }
-
-  React.useEffect(() => {
-    socket?.connect();
-
-    socket?.on("connect", () => {
-      console.log("Connected to Socket.IO server");
-      socket?.emit("join_room", { room: game.room });
-    });
-
-    socket?.on("welcome", () => {
-      handleConection();
-    });
-
-    socket?.on("card_played", (data) => {
-      dispatch(setPlayedCardsState(data))
-    });
-
-    socket?.on("game_ready", () => {
-      handleDeal();
-    });
-
-    return () => {
-    };
-  }, []);
-
   // Función para manejar el clic en una carta
   const handleCardClick = (card: Card) => {
-    socket?.emit("play_card", card, { room: game.room });
   };
 
   return (
@@ -133,21 +92,21 @@ function Game() {
               <div className="mt-[-40px]">
                 <div className="relative w-[100px] h-[90px] mt-8 flex justify-center items-center">
                   <div className="absolute inset-0 bg-white z-0 w-[82px] h-[90px] ml-[10px]" />
-                  <Image src={oponent_1?.avatar} alt="avatar" width={70} height={70} className="absolute z-10" />
+                  <Image src={oponent.avatar} alt="avatar" width={70} height={70} className="absolute z-10" />
                   <div className="absolute z-20">
-                    <Image src={images.overlay} alt="overlay" width={120} height={120} />
+                    <Image src="/overlay.png" alt="overlay" width={120} height={120} />
                   </div>
                 </div>
                 <div className="text-center text-white truncate max-w-[100px]">
-                  @{oponent_1?.username}
+                  @{oponent.username}
                 </div>
               </div>
             </div>
 
             <div className="flex flex-row ml-3">
-              {Array.from({ length: oponent_1_cards }, (_, index) => (
-                <div key={index} className={`${getOponentCardStyle(index)}`}>
-                  <Image src={images.card_back} alt={`Carta ${index + 1}`} width={70} height={70} />
+              {Array.from({ length: oponentCards }, (_, index) => (
+                <div key={index} className={`${oponentCardStyle(index)}`}>
+                  <Image src="/card_back.png" alt={`Carta ${index + 1}`} width={70} height={70} />
                 </div>
               ))}
 
@@ -160,23 +119,23 @@ function Game() {
               <div className="text-center text-white">
                 <div className="flex flex-row">
                   <div>
-                    <Image src={images.card_back} width={60} height={60} alt="" />
+                    <Image src="/card_back.png" width={60} height={60} alt="" />
                   </div>
 
                   <div>
-                    {game_card ? (
-                      <Image src={game_card.image} alt="Carta del Juego" width={60} height={70} />
+                    {vida ? (
+                      <Image src={vida.image} alt="Carta del Juego" width={60} height={70} />
                     ) : (
-                      <Image src={images.card_back} alt="Carta Oculta" width={60} height={70} />
+                      <Image src="/card_back.png" alt="Carta Oculta" width={60} height={70} />
                     )}
                   </div>
                 </div>
               </div>
 
 
-              {/*played cards*/}
+              {/*table cards*/}
               <div className="flex flex-row">
-                {played_cards && played_cards.map((card: any, index: any) => (
+                {tableCards && tableCards.map((card: any, index: any) => (
                   <div key={index}>
                     <Image src={card.image} alt="" width={60} height={70} />
                   </div>
@@ -191,9 +150,9 @@ function Game() {
               <div className="">
                 <div className="relative w-[100px] h-[90px] flex justify-center items-center">
                   <div className="absolute inset-0 bg-white z-0 w-[82px] h-[90px] ml-[10px]" />
-                  <Image src={user?.avatar || defaultAvatar} alt="avatar" width={70} height={70} className="absolute z-10" />
+                  <Image src={user?.avatar || "http://localhost:5000/default.png"} alt="avatar" width={70} height={70} className="absolute z-10" />
                   <div className="absolute z-20">
-                    <Image src={images.overlay} alt="overlay" width={120} height={120} />
+                    <Image src="/overlay.png" alt="overlay" width={120} height={120} />
                   </div>
                 </div>
                 <div className="text-center text-white truncate max-w-[100px]">
@@ -203,22 +162,19 @@ function Game() {
             </div>
 
             <div className="flex flex-row ml-3">
-              {player_cards && player_cards.map((card, index) => (
+              {playerCards && playerCards.map((card, index) => (
                 <div
                   key={index}
-                  className={`${getCardStyle(index)} cursor-pointer`}
+                  className={`${playerCardStyle(index)} cursor-pointer`}
                   onClick={() => handleCardClick(card)} // Añadido onClick para manejar el clic en la carta
                 >
                   <Image src={card.image} width={70} height={70} alt={`Carta ${index + 1}`} />
                 </div>
               ))}
             </div>
-
           </div>
         </div>
       </div>
     </React.Fragment>
   )
 }
-
-export default Game
