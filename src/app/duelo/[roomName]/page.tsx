@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useMediaQuery } from '@/components/use-media-query'
@@ -27,6 +27,8 @@ interface GameCard {
 }
 
 export default function Duel() {
+  const [matchSocket, setMatchSocket] = useState<WebSocket | null>(null)
+
   const router = useRouter()
 
   // Get roomName from the URL
@@ -78,9 +80,32 @@ export default function Duel() {
   }
 
   // Función para manejar el clic en una carta
-  const handleCardClick = (card: Card) => {}
+  const handleCardClick = (card: Card) => {
+    // Submit card to ws
+    const cardStr = `${card.number} ${card.suit}`
+    if (matchSocket) {
+      matchSocket.send(
+        JSON.stringify({
+          type: 'use card',
+          value: cardStr,
+        })
+      )
+    }
+  }
 
   // Load users data when the component is mounted
+  useEffect(() => {
+    // Setup WS
+    const WS_HOST = process.env.NEXT_PUBLIC_WS_HOST
+    const wsEndpoint = `${WS_HOST}/match/${roomName}/`
+    const newSocket = new WebSocket(wsEndpoint)
+    setMatchSocket(newSocket)
+
+    // dummy data
+    setOponent({ username: 'Oponente', avatar: '/avatar.png' })
+    setOponentCards(3)
+  }, [])
+
   useEffect(() => {
     // Get card data fvrom text like: '1 hearts'
     function getCardData(card: string): Card {
@@ -107,87 +132,72 @@ export default function Duel() {
       })
     }
 
-    console.log(tableCards)
-
-    // Run only once
-    if (isRunning.current) {
-      return
-    }
-
-    const WS_HOST = process.env.NEXT_PUBLIC_WS_HOST
-    const wsEndpoint = `${WS_HOST}/match/${roomName}/`
-
-    const matchSocket = new WebSocket(wsEndpoint)
-
     // send username to the server after connection is open
-    matchSocket.onopen = function (e) {
-      // Send username only once
-      matchSocket.send(
-        JSON.stringify({
-          type: 'username',
-          value: user.username,
-        })
-      )
-    }
+    if (matchSocket) {
+      matchSocket.onopen = function (e) {
+        // Send username only once
+        matchSocket.send(
+          JSON.stringify({
+            type: 'username',
+            value: user.username,
+          })
+        )
+      }
 
-    // Get messages from the server
-    matchSocket.onmessage = function (e) {
-      const data = JSON.parse(e.data)
-      // console.log(data)
+      // Get messages from the server
+      matchSocket.onmessage = function (e) {
+        const data = JSON.parse(e.data)
+        console.log(data)
 
-      if (data.type === 'usernames') {
-        // Set oponent username
-        const usernames = data.value
-        for (const username of usernames) {
-          if (username !== user.username) {
-            setOponent({ username, avatar: '/avatar.png' })
+        if (data.type === 'usernames') {
+          // Set oponent username
+          const usernames = data.value
+          for (const username of usernames) {
+            if (username !== user.username) {
+              setOponent({ username, avatar: '/avatar.png' })
+            }
           }
-        }
-      } else if (data.type === 'round cards') {
-        // Delete old cards
-        setPlayerCards([])
+        } else if (data.type === 'round cards') {
+          // Delete old cards
+          setPlayerCards([])
 
-        // render user cards
-        const roundCards = data.value
-        for (const card of roundCards) {
-          const cardData = getCardData(card)
-          setPlayerCards((prev) => [
-            ...prev,
+          // render user cards
+          const roundCards = data.value
+          for (const card of roundCards) {
+            const cardData = getCardData(card)
+            setPlayerCards((prev) => [
+              ...prev,
+              {
+                suit: cardData.suit,
+                number: cardData.number,
+                image: cardData.image,
+              },
+            ])
+          }
+        } else if (data.type === 'middle card') {
+          const middileCard = data.value
+          const cardData = getCardData(middileCard)
+          setTableCards((prev) => [
             {
               suit: cardData.suit,
               number: cardData.number,
               image: cardData.image,
             },
           ])
-        }
-      } else if (data.type === 'middle card') {
-        const middileCard = data.value
-        const cardData = getCardData(middileCard)
-        console.log({ middileCard, cardData })
-        setTableCards((prev) => [
-          {
-            suit: cardData.suit,
-            number: cardData.number,
-            image: cardData.image,
-          },
-        ])
-      } else if (data.type === 'error') {
-        // Render errores with sweetalert
-        showError(data.value)
+        } else if (data.type === 'error') {
+          // Render errores with sweetalert
+          showError(data.value)
+        } 
+      }
+
+      matchSocket.onclose = function (e) {
+        showError('Se perdió la conexión con el servidor')
       }
     }
-
-    matchSocket.onclose = function (e) {
-      showError('Se perdió la conexión con el servidor')
-    }
-
-    // dummy data
-    setOponent({ username: 'Oponente', avatar: '/avatar.png' })
-    setOponentCards(3)
-  }, [])
+  }, [matchSocket])
 
   useEffect(() => {
-    console.log(tableCards)
+    console.log({tableCards})
   }, [tableCards])
 
   return (
