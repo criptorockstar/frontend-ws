@@ -39,12 +39,12 @@ export default function Duel() {
   const { roomName } = useParams()
   
   // Game state
-  const [matchSocket, setMatchSocket] = useState<WebSocket | null>(null)
   const isDesktop = useMediaQuery('(min-width: 768px)')
+  const [matchSocket, setMatchSocket] = useState<WebSocket | null>(null)
   const [showOverlay, setShowOverlay] = React.useState(false)
+  const [textOverlay, setTextOverlay] = React.useState('')
   const [points, setPoints] = React.useState<number>(0)
   const [selectedCard, setSelectedCard] = React.useState<GameCard | null>(null)
-  const wsSetup = useRef(false)
 
   // Players
   const user = useAppSelector((state: RootState) => state.user)
@@ -116,15 +116,13 @@ export default function Duel() {
   
   useEffect(() => {
     // Setup WS when roomName is available
-    if (roomName && !wsSetup.current) {
-      
+    if (roomName) {
+
       console.log('Connecting to WS...')
       const WS_HOST = process.env.NEXT_PUBLIC_WS_HOST
       const wsEndpoint = `${WS_HOST}/match/${roomName}/`
       const newSocket = new WebSocket(wsEndpoint)
       setMatchSocket(newSocket)
-
-      wsSetup.current = true
     }
   }, [roomName])
 
@@ -178,6 +176,17 @@ export default function Duel() {
                 value: '',
               })
             )
+
+          // Request middle card
+          setTimeout(() => {
+            matchSocket &&
+              matchSocket.send(
+                JSON.stringify({
+                  type: 'middle card',
+                  value: '',
+                })
+              )
+          }, 1000)
 
           // Request more cards if user has 0 cards
           setPlayerCards((prev) => {
@@ -287,9 +296,6 @@ export default function Duel() {
           }
         } else if (data.type === 'round winner') {
           setTimeout(() => {
-            // Reset table cards
-            setTableCards([])
-
             // reset selected card
             setSelectedCard(null)
 
@@ -303,6 +309,14 @@ export default function Duel() {
               setPoints(pointsData.points)
             }
           }
+        } else if (data.type === 'game winner') {
+          // Show winner in modal
+          let message = "Ganaste el juego!"
+          if (data.value !== user.username) {
+            message = `¡${data.value} ha ganado el juego!`
+          }
+          setTextOverlay(message)
+          setShowOverlay(true)
         }
       }
 
@@ -314,7 +328,22 @@ export default function Duel() {
 
   // Monitoring
   useEffect(() => {
-    // console.log({ tableCards })
+
+    // Request middile card after 0.5 seconds without it
+    if (tableCards.length == 0) {
+      setTimeout(() => {
+
+        console.log('Requesting middle card...')
+
+        matchSocket &&
+          matchSocket.send(
+            JSON.stringify({
+              type: 'middle card',
+              value: '',
+            })
+          )
+      }, 0.5)
+    }
   }, [tableCards])
 
   useEffect(() => {
@@ -344,7 +373,7 @@ export default function Duel() {
             <div className='relative'>
               {showOverlay && (
                 <div className='fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50'>
-                  <div className='text-white text-2xl'>Empieza el juego</div>
+                  <div className='text-white text-2xl'>{textOverlay}</div>
                 </div>
               )}
               {/* Área de la Mesa */}
