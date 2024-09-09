@@ -14,6 +14,7 @@ import Stone from "@/components/stone-meter"
 import Swal from 'sweetalert2/dist/sweetalert2.js'
 import 'sweetalert2/src/sweetalert2.scss'
 
+// Types
 interface Card {
   suit: string
   number: number
@@ -37,27 +38,24 @@ export default function Duel() {
   // Get roomName from the URL
   const { roomName } = useParams()
 
-  // State manager for first render
-  const isRunning = useRef(false)
-
+  // Game state
   const isDesktop = useMediaQuery('(min-width: 768px)')
   const [showOverlay, setShowOverlay] = React.useState(false)
-
-  const user = useAppSelector((state: RootState) => state.user)
-
-  const [oponent, setOponent] = React.useState<Oponent>({
-    username: '',
-    avatar: '',
-  })
-  const [oponentCards, setOponentCards] = React.useState<number>(0)
-
-  const [tableCards, setTableCards] = React.useState<Card[]>([])
-  const [vida, setVida] = React.useState<Card>()
-
-  const [playerCards, setPlayerCards] = React.useState<Card[]>([])
-
   const [points, setPoints] = React.useState<number>(0)
 
+  // Players
+  const user = useAppSelector((state: RootState) => state.user)
+  const [oponent, setOponent] = React.useState<Oponent>({
+  username: '',
+    avatar: '',
+  })
+  
+  // Cards
+  const [tableCards, setTableCards] = React.useState<Card[]>([])
+  const [playerCards, setPlayerCards] = React.useState<Card[]>([])
+  const [oponentCards, setOponentCards] = React.useState<number>(0)
+
+  // Styles for cards
   const playerCardStyle = (index: number) => {
     switch (index) {
       case 0:
@@ -84,9 +82,10 @@ export default function Duel() {
     }
   }
 
-  // Función para manejar el clic en una carta
+  // Event handlers
+
   const handleCardClick = (card: Card) => {
-    // Submit card to ws
+    // Submit card to ws when clicked
     const cardStr = `${card.number} ${card.suit}`
     if (matchSocket) {
       matchSocket.send(
@@ -98,8 +97,11 @@ export default function Duel() {
     }
   }
 
-  // Load users data when the component is mounted
+  // Lifecycle
+
   useEffect(() => {
+    // App setup
+
     // Setup WS
     const WS_HOST = process.env.NEXT_PUBLIC_WS_HOST
     const wsEndpoint = `${WS_HOST}/match/${roomName}/`
@@ -112,6 +114,8 @@ export default function Duel() {
   }, [])
 
   useEffect(() => {
+    // Websocket setup
+
     // Get card data fvrom text like: '1 hearts'
     function getCardData(card: string): Card {
       const cardParts = card.split(' ')
@@ -256,6 +260,7 @@ export default function Duel() {
     }
   }, [matchSocket])
 
+  // Monitoring
   useEffect(() => {
     console.log({ tableCards })
   }, [tableCards])
