@@ -14,6 +14,23 @@ function Dashboard() {
   const isRunning = useRef(false)
 
   useEffect(() => {
+
+    // Show error with sweetalert
+    function showError(message: string) {
+      Swal.fire({
+        title: 'Error',
+        text: message,
+        icon: 'error',
+        confirmButtonText: 'Ir a la pantalla de inicio',
+      }).then((result: any) => {
+        if (result.isConfirmed) {
+          // Redirect to the match page with router
+          const page = `/`
+          router.push(page)
+        }
+      })
+    }
+
     // Run only once
     if (isRunning.current) {
       return
@@ -48,12 +65,6 @@ function Dashboard() {
           router.push(page)
         }
       })
-
-      // if (data.room_name) {
-      //     setTimeout(() => {
-      //         window.location.href = `/pericon/match/${data.room_name}/`
-      //     }, 2000)
-      // }
     }
 
     // Catch errors
@@ -62,7 +73,11 @@ function Dashboard() {
     }
 
     socket.onerror = function (e) {
-      console.log('Error connecting to the server.')
+      showError('No se pudo conectar al servidor. Intente de nuevo más tarde.')
+    }
+
+    socket.onclose = function (e) {
+      showError('Se ha perdido la conexión con el servidor. Intente de nuevo más tarde.')
     }
   }, [])
 

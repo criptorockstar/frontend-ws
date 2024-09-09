@@ -1,11 +1,15 @@
 'use client'
 
 import React, { useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useMediaQuery } from '@/components/use-media-query'
 import { RootState, useAppSelector } from '@/store/store'
 import { useParams } from 'next/navigation'
 import { table } from 'console'
+import Swal from 'sweetalert2/dist/sweetalert2.js'
+
+import 'sweetalert2/src/sweetalert2.scss'
 
 interface Card {
   suit: string
@@ -23,6 +27,8 @@ interface GameCard {
 }
 
 export default function Duel() {
+  const router = useRouter()
+
   // Get roomName from the URL
   const { roomName } = useParams()
 
@@ -76,13 +82,29 @@ export default function Duel() {
 
   // Load users data when the component is mounted
   useEffect(() => {
-
+    // Get card data fvrom text like: '1 hearts'
     function getCardData(card: string): Card {
       const cardParts = card.split(' ')
       const cardNumber = parseInt(cardParts[0])
       const cardSuit = cardParts[1]
       const cardImage = `/cards/${cardNumber}_${cardSuit}.png`
       return { suit: cardSuit, number: cardNumber, image: cardImage }
+    }
+
+    // Show error with sweetalert
+    function showError(message: string) {
+      Swal.fire({
+        title: 'Error',
+        text: message,
+        icon: 'error',
+        confirmButtonText: 'Ir a la pantalla de inicio',
+      }).then((result: any) => {
+        if (result.isConfirmed) {
+          // Redirect to the match page with router
+          const page = `/`
+          router.push(page)
+        }
+      })
     }
 
     console.log(tableCards)
@@ -99,6 +121,7 @@ export default function Duel() {
 
     // send username to the server after connection is open
     matchSocket.onopen = function (e) {
+      // Send username only once
       matchSocket.send(
         JSON.stringify({
           type: 'username',
@@ -130,18 +153,32 @@ export default function Duel() {
           const cardData = getCardData(card)
           setPlayerCards((prev) => [
             ...prev,
-            { suit: cardData.suit, number: cardData.number, image: cardData.image },
+            {
+              suit: cardData.suit,
+              number: cardData.number,
+              image: cardData.image,
+            },
           ])
         }
       } else if (data.type === 'middle card') {
         const middileCard = data.value
         const cardData = getCardData(middileCard)
-        console.log({middileCard, cardData})
+        console.log({ middileCard, cardData })
         setTableCards((prev) => [
-          { suit: cardData.suit, number: cardData.number, image: cardData.image },
+          {
+            suit: cardData.suit,
+            number: cardData.number,
+            image: cardData.image,
+          },
         ])
-        
+      } else if (data.type === 'error') {
+        // Render errores with sweetalert
+        showError(data.value)
       }
+    }
+
+    matchSocket.onclose = function (e) {
+      showError('Se perdió la conexión con el servidor')
     }
 
     // dummy data
@@ -224,7 +261,6 @@ export default function Duel() {
           {/* Elemento Central */}
           <div className='flex justify-center'>
             <div>
-              
               {/* <div className='text-center text-white'>
                 <div className='flex flex-row'>
                   <div>
