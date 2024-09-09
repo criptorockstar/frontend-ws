@@ -58,6 +58,7 @@ function Dashboard() {
 
       // Connect to the websocket
       const WS_HOST = process.env.NEXT_PUBLIC_WS_HOST
+      console.log('Connecting to the server: ', WS_HOST)
       const wsEndpoint = `${WS_HOST}/matchmaker/`
       const socket = new WebSocket(wsEndpoint)
       isRunning.current = true
