@@ -12,7 +12,7 @@ import Timer from '@/components/timer'
 import Stone from '@/components/stone-meter'
 import Link from 'next/link'
 
-import Swal from 'sweetalert2/dist/sweetalert2.js'
+import Swal from 'sweetalert2'
 import 'sweetalert2/src/sweetalert2.scss'
 
 // Types

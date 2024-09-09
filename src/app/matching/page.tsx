@@ -12,7 +12,7 @@ import LobbyUI from '@/components/lobby-ui'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
-import Swal from 'sweetalert2/dist/sweetalert2.js'
+import Swal from 'sweetalert2'
 import 'sweetalert2/src/sweetalert2.scss'
 
 function Dashboard() {
