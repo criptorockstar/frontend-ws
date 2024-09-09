@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import Timer from "@/components/timer"
+import Stone from "@/components/stone-meter"
 
 export default function GameLayout({
   children,
@@ -14,8 +16,12 @@ export default function GameLayout({
         {/* UI content */}
         <div className="relative z-10">
           <div className="flex justify-between w-full mt-5">
-            <div className="mt-[5px] mb-4"></div>
-            <div></div>
+            <div className="mt-[5px] mb-4">
+              <Timer timer={"30:00"} />
+            </div>
+            <div>
+              <Stone stones={30} />
+            </div>
           </div>
           {/* Dynamic content */}
           <div className="flex items-center justify-center h-full">

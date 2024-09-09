@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import dynamic from "next/dynamic";
+const ReduxProvider = dynamic(() => import("./StoreProvider"), {
+  ssr: false
+});
 import "./globals.css";
 
 const geistSans = localFont({
@@ -28,7 +32,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <ReduxProvider>
+          <main className="grid h-screen overflow-auto space-y-0">
+            {children}
+          </main>
+        </ReduxProvider>
       </body>
     </html>
   );
