@@ -38,7 +38,7 @@ export default function Home() {
           <Button
             type="button"
             onClick={() => router.push("/lobby")}
-            className={`${fonts.bowlbyOneSC.className} z-30 xl:w-[200px] bg-gradient-to-tr from-yellow-950 to-yellow-700 px-6 text-white shadow-lg w-[120px] lg:w-[150px] rounded-xl`}>
+            className={`${fonts.bowlbyOneSC.className} z-30 xl:w-[200px]  bg-gradient-to-tr from-yellow-950 to-yellow-700 px-6 text-white shadow-lg w-[120px] lg:w-[150px] rounded-xl`}>
             <span className="animate-blink">Jugar</span>
           </Button>
         </div>
