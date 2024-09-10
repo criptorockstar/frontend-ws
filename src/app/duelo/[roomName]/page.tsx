@@ -152,17 +152,17 @@ export default function Duel() {
     }
 
     function showWinner(winner: string) {
-      let mainText = '¡Ganaste la ronda!'
+      let mainText = '¡Ganaste el turno!'
       if (winner === 'draw') {
         mainText = '¡Empate!'
       } else if (winner !== user.username) {
-        mainText = '¡Perdiste la ronda!'
+        mainText = '¡Perdiste el turno!'
       }
 
       Swal.fire({
         title: mainText,
         icon: winner === user.username ? 'success' : 'warning',
-        confirmButtonText: 'Siguiente ronda',
+        confirmButtonText: 'Siguiente turno',
       }).then((result: any) => {
 
         // Request more cards if user has 0 cards
@@ -253,7 +253,7 @@ export default function Duel() {
         } else if (data.type === 'error') {
           // Render errores with sweetalert
           showError(data.value)
-        } else if (data.type === 'round played cards') {
+        } else if (data.type === 'turn played cards') {
           for (const cardItem of data.value) {
             const player = cardItem.player
             const card = cardItem.card
