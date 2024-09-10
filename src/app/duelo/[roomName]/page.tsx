@@ -91,6 +91,7 @@ export default function Duel() {
   // Event handlers
 
   const handleCardClick = (card: Card) => {
+
     // Set selected card
     setSelectedCard(card)
 
@@ -104,6 +105,9 @@ export default function Duel() {
         })
       )
     }
+
+    // Activate waiting overlay
+    setWaitingOpponent(true)
   }
 
   // Lifecycle
@@ -279,29 +283,35 @@ export default function Duel() {
                 return newPlayerCards
               })
             }
+
+            // Disable waiting overlay
+            setWaitingOpponent(false)
           }
-        } else if (data.type === 'turn winner') {
+        } else if (data.type.includes('winner')) {
           setTimeout(() => {
             // reset selected card
             setSelectedCard(null)
 
             // Show winner with alert
-            showWinner(data.value, 'el', 'turno')
+            if (data.type === 'round winner') {
+              showWinner(data.value, 'la', 'ronda')
+            } else if (data.type === 'turn winner') {
+              showWinner(data.value, 'el', 'turno')
+            } else if (data.type === 'game winner') {
+              // Show winner in modal
+              let message = 'Ganaste el juego!'
+              if (data.value !== user.username) {
+                message = `¡${data.value} ha ganado el juego!`
+              }
+              setTextOverlay(message)
+              setCtaTextOverlay('Volver a jugar')
+              setCtaLinkOverlay('/matching')
+              setShowOverlay(true)
+            }
 
             // Hide waiting overlay
             setWaitingOpponent(false)
-          }, 1000)
-        } else if (data.type === 'round winner') {
-          setTimeout(() => {
-            // reset selected card
-            setSelectedCard(null)
-
-            // Show winner with alert
-            showWinner(data.value, 'la', 'ronda')
-
-            // Hide waiting overlay
-            setWaitingOpponent(false)
-          }, 1000)
+          }, 1500)
         } else if (data.type === 'points') {
           // Update player points
           for (const pointsData of data.value) {
@@ -309,16 +319,6 @@ export default function Duel() {
               setPoints(pointsData.points)
             }
           }
-        } else if (data.type === 'game winner') {
-          // Show winner in modal
-          let message = 'Ganaste el juego!'
-          if (data.value !== user.username) {
-            message = `¡${data.value} ha ganado el juego!`
-          }
-          setTextOverlay(message)
-          setCtaTextOverlay('Volver a jugar')
-          setCtaLinkOverlay('/matching')
-          setShowOverlay(true)
         }
       }
 
