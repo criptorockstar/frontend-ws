@@ -103,7 +103,7 @@ const Duel = ({
           flex flex-col relative z-50 w-full box-border outline-none 
           mx-1 my-1 sm:mx-6 sm:my-16 max-w-md rounded-large 
           ${open ? "scale-100 opacity-100" : "scale-125 opacity-0"}
-          ${!duelMode ? "bg-[transparent]" : "bg-[#9d6727] shadow-small rounded-lg"}
+          ${!duelMode ? "bg-[transparent]" : "bg-[#9d6727] shadow-small rounded-xl"}
         `}>
           {/*Choose duel mode and bets*/}
           {!duelMode && (

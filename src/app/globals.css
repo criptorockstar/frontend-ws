@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+
+/* Color variables */
+:root {
+  --color-yellow: #daaa00;
+  --color-brown: #5e3c1b;
+  --color-white: #fff;
+}
+
 .bg-table {
   background-image: url("/table.png");
   background-repeat: no-repeat;
@@ -109,4 +117,10 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Custom sweetalert */
+.swal2-confirm {
+  background-color: var(--color-brown) !important;
+  color: var(--color-white) !important;
 }

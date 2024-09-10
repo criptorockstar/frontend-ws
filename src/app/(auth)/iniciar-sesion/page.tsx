@@ -90,7 +90,6 @@ export default function SignIn() {
           username: result.username,
           email: result.email,
           isAdmin: result.isAdmin,
-          player: result.player,  // Incluye toda la estructura de player
         };
 
         dispatch(setUserState(payload));
@@ -110,18 +109,18 @@ export default function SignIn() {
             width={301}
             height={76}
             alt="Logo"
-            className="mt-2 w-[301px] h-[76px] xl:w-[500px] xl:h-[126px] xl:mt-8"
+            className="mt-2 w-[301px] h-[76px] xl:mt-8"
           />
         </Link>
 
-        <div className="flex flex-col justify-center h-full mb-2 xl:mt-[-60px]">
+        <div className="flex flex-col justify-center h-full mb-2">
           <div>
             <Image
               src="/carora.svg"
               width={230}
               height={230}
               alt=""
-              className="w-[230px] h-[230px] xl:w-[350px] xl:h-[350px]"
+              className="w-[230px] h-[230px]"
             />
           </div>
 
@@ -155,7 +154,7 @@ export default function SignIn() {
                 />
                 <div className="flex justify-center">
                   <Button type="submit"
-                    className="xl:w-[318px] bg-gradient-to-tr rounded-xl from-yellow-950 to-yellow-700 pl-6 pr-6 text-white shadow-lg"
+                    className="xl:w-[230px] bg-gradient-to-tr rounded-xl from-yellow-950 to-yellow-700 pl-6 pr-6 text-white shadow-lg"
                   >Ingresar</Button>
                 </div>
               </form>
