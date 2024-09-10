@@ -164,14 +164,6 @@ export default function Duel() {
         icon: winner === user.username ? 'success' : 'warning',
         confirmButtonText: 'Siguiente ronda',
       }).then((result: any) => {
-        // Start next round
-        matchSocket &&
-          matchSocket.send(
-            JSON.stringify({
-              type: 'next round',
-              value: '',
-            })
-          )
 
         // Request more cards if user has 0 cards
         setPlayerCards((prev) => {
@@ -188,8 +180,12 @@ export default function Duel() {
           return prev
         })
 
-        // Wait for opponent
-        setWaitingOpponent(true)
+        // Remove other cards from table and only keep middle card
+        setTableCards((prev) => {
+          const middleCard = prev[0]
+          console.log({ middleCard, prev })
+          return [middleCard]
+        })
       })
     }
 
@@ -235,13 +231,14 @@ export default function Duel() {
             ])
           }
         } else if (data.type === 'middle card') {
+
           // Update table cards
-          const middileCard = data.value
-          if (middileCard === '') {
+          const middleCard = data.value
+          if (middleCard === '') {
             setTableCards([])
             return
           }
-          const cardData = getCardData(middileCard)
+          const cardData = getCardData(middleCard)
           setTableCards((prev) => [
             {
               suit: cardData.suit,
@@ -252,6 +249,7 @@ export default function Duel() {
 
           // Hide waiting overlay
           setWaitingOpponent(false)
+
         } else if (data.type === 'error') {
           // Render errores with sweetalert
           showError(data.value)
@@ -282,13 +280,16 @@ export default function Duel() {
               })
             }
           }
-        } else if (data.type === 'round winner') {
+        } else if (data.type === 'turn winner') {
           setTimeout(() => {
             // reset selected card
             setSelectedCard(null)
 
             // Show winner with alert
             showWinner(data.value)
+
+            // Hide waiting overlay
+            setWaitingOpponent(false)
           }, 1000)
         } else if (data.type === 'points') {
           // Update player points
@@ -334,12 +335,8 @@ export default function Duel() {
 
   // Monitoring
   useEffect(() => {
-    // console.log({ playerCards })
-  }, [playerCards])
-
-  useEffect(() => {
-    // console.log({ selectedCard })
-  }, [selectedCard])
+    console.log({ playerCards, tableCards })
+  }, [playerCards, tableCards])
 
   return (
     <main className='grid h-screen overflow-auto space-y-0'>
