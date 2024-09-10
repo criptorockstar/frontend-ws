@@ -151,18 +151,18 @@ export default function Duel() {
       })
     }
 
-    function showWinner(winner: string) {
-      let mainText = '¡Ganaste el turno!'
+    function showWinner(winner: string, winnerTypePrefix: string, winnerType: string) {
+      let mainText = `¡Ganaste ${winnerTypePrefix} ${winnerType}!`
       if (winner === 'draw') {
         mainText = '¡Empate!'
       } else if (winner !== user.username) {
-        mainText = '¡Perdiste el turno!'
+        mainText = `¡Perdiste ${winnerTypePrefix} ${winnerType}!`
       }
 
       Swal.fire({
         title: mainText,
         icon: winner === user.username ? 'success' : 'warning',
-        confirmButtonText: 'Siguiente turno',
+        confirmButtonText: `Siguiente ${winnerType}`,
       }).then((result: any) => {
 
         // Request more cards if user has 0 cards
@@ -286,7 +286,18 @@ export default function Duel() {
             setSelectedCard(null)
 
             // Show winner with alert
-            showWinner(data.value)
+            showWinner(data.value, 'el', 'turno')
+
+            // Hide waiting overlay
+            setWaitingOpponent(false)
+          }, 1000)
+        } else if (data.type === 'round winner') {
+          setTimeout(() => {
+            // reset selected card
+            setSelectedCard(null)
+
+            // Show winner with alert
+            showWinner(data.value, 'la', 'ronda')
 
             // Hide waiting overlay
             setWaitingOpponent(false)
