@@ -42,7 +42,7 @@ export default function Duel() {
   const isDesktop = useMediaQuery('(min-width: 768px)')
   const [matchSocket, setMatchSocket] = useState<WebSocket | null>(null)
   const [showOverlay, setShowOverlay] = React.useState(false)
-  const [textOverlay, setTextOverlay] = React.useState("Sample text overlay")
+  const [textOverlay, setTextOverlay] = React.useState('Sample text overlay')
   const [ctaTextOverlay, setCtaTextOverlay] = React.useState('CTA')
   const [ctaLinkOverlay, setCtaLinkOverlay] = React.useState('/')
   const [points, setPoints] = React.useState<number>(0)
@@ -164,45 +164,32 @@ export default function Duel() {
         icon: winner === user.username ? 'success' : 'warning',
         confirmButtonText: 'Siguiente ronda',
       }).then((result: any) => {
-        if (result.isConfirmed) {
-          // Start next round
-          matchSocket &&
-            matchSocket.send(
-              JSON.stringify({
-                type: 'next round',
-                value: '',
-              })
-            )
+        // Start next round
+        matchSocket &&
+          matchSocket.send(
+            JSON.stringify({
+              type: 'next round',
+              value: '',
+            })
+          )
 
-          // // Request middle card
-          // setTimeout(() => {
-          //   matchSocket &&
-          //     matchSocket.send(
-          //       JSON.stringify({
-          //         type: 'middle card',
-          //         value: '',
-          //       })
-          //     )
-          // }, 1000)
+        // Request more cards if user has 0 cards
+        setPlayerCards((prev) => {
+          if (prev.length === 0) {
+            matchSocket &&
+              matchSocket.send(
+                JSON.stringify({
+                  type: 'more cards',
+                  value: '',
+                })
+              )
+            return []
+          }
+          return prev
+        })
 
-          // Request more cards if user has 0 cards
-          setPlayerCards((prev) => {
-            if (prev.length === 0) {
-              matchSocket &&
-                matchSocket.send(
-                  JSON.stringify({
-                    type: 'more cards',
-                    value: '',
-                  })
-                )
-              return []
-            }
-            return prev
-          })
-
-          // Wait for opponent
-          setWaitingOpponent(true)
-        }
+        // Wait for opponent
+        setWaitingOpponent(true)
       })
     }
 
@@ -248,7 +235,6 @@ export default function Duel() {
             ])
           }
         } else if (data.type === 'middle card') {
-
           // Update table cards
           const middileCard = data.value
           if (middileCard === '') {
@@ -266,7 +252,6 @@ export default function Duel() {
 
           // Hide waiting overlay
           setWaitingOpponent(false)
-
         } else if (data.type === 'error') {
           // Render errores with sweetalert
           showError(data.value)
@@ -286,7 +271,6 @@ export default function Duel() {
               },
             ])
 
-
             if (player === user.username) {
               // Remove card from player
               setPlayerCards((prevPlayerCards) => {
@@ -305,7 +289,6 @@ export default function Duel() {
 
             // Show winner with alert
             showWinner(data.value)
-
           }, 1000)
         } else if (data.type === 'points') {
           // Update player points
@@ -334,7 +317,6 @@ export default function Duel() {
   }, [matchSocket])
 
   useEffect(() => {
-    
     if (waitingOpponent) {
       // Set overlay text and disable CTAs
       setTextOverlay('Esperando al oponente...')
@@ -344,7 +326,6 @@ export default function Duel() {
     } else {
       setShowOverlay(false)
     }
-
   }, [waitingOpponent])
 
   useEffect(() => {
