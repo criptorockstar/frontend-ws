@@ -1,11 +1,10 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useMediaQuery } from '@/components/use-media-query'
 import { RootState, useAppSelector } from '@/store/store'
 import { useParams } from 'next/navigation'
-import { table } from 'console'
 
 import Image from 'next/image'
 import Timer from '@/components/timer'
@@ -45,6 +44,7 @@ export default function Duel() {
   const [textOverlay, setTextOverlay] = React.useState('Sample text overlay')
   const [ctaTextOverlay, setCtaTextOverlay] = React.useState('CTA')
   const [ctaLinkOverlay, setCtaLinkOverlay] = React.useState('/')
+  const [imageOverlay, setImageOverlay] = React.useState('')
   const [points, setPoints] = React.useState<number>(0)
   const [selectedCard, setSelectedCard] = React.useState<GameCard | null>(null)
   const [waitingOpponent, setWaitingOpponent] = React.useState(true)
@@ -299,11 +299,11 @@ export default function Duel() {
               showWinner(data.value, 'el', 'turno')
             } else if (data.type === 'game winner') {
               // Show winner in modal
-              let message = 'Ganaste el juego!'
+              setImageOverlay('/win.svg')
               if (data.value !== user.username) {
-                message = `¡${data.value} ha ganado el juego!`
+                setImageOverlay('/lose.svg')
               }
-              setTextOverlay(message)
+              setTextOverlay("¡Fin del juego!")
               setCtaTextOverlay('Volver a jugar')
               setCtaLinkOverlay('/matching')
               setShowOverlay(true)
@@ -369,6 +369,21 @@ export default function Duel() {
               {showOverlay && (
                 <div className='fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 flex-col'>
                   <div className='text-white text-2xl'>{textOverlay}</div>
+                  {
+                    imageOverlay
+                    &&
+                    <Image
+                      src={imageOverlay}
+                      alt='overlay'
+                      width={300}
+                      height={300}
+                      className={`
+                        w-10/12
+                        max-w-xl
+                        h-auto
+                      `}
+                    />
+                  }
                   {ctaLinkOverlay && ctaTextOverlay && (
                     <Link
                       href={ctaLinkOverlay}
