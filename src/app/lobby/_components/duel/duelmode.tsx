@@ -101,10 +101,9 @@ const Duelmode = ({
         <div className="relative flex flex-row gap-2 px-6 py-4 justify-center">
           <Button
             onClick={() => onMode(selectedValue, selectedCredits)}
-            data-hover={null}
             className={`
             ${fonts.bowlbyOneSC.className} 
-            bg-[#68b22f] uppercase text-white text-[30px]
+            bg-[#68b22f] hover:bg-[#68b22f] uppercase text-white text-[30px]
             border-2 border-[#A7753A]
             px-8 py-7
           `}>
